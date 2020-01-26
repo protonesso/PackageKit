@@ -56,6 +56,10 @@ if BACKEND_TYPE_NIX
 SUBDIRS += nix
 endif
 
+if BACKEND_TYPE_NEKO
+SUBDIRS += neko
+endif
+
 clean-local :
 	rm -f *~
 

@@ -386,6 +386,7 @@ AC_ARG_ENABLE(urpmi, AS_HELP_STRING([--enable-urpmi],[use the URPMI backend]),en
 AC_ARG_ENABLE(yum, AS_HELP_STRING([--enable-yum],[use the YUM backend]),enable_yum=$enableval,enable_yum=no)
 AC_ARG_ENABLE(zypp, AS_HELP_STRING([--enable-zypp],[use the Zypp backend]),enable_zypp=$enableval,enable_zypp=no)
 AC_ARG_ENABLE(nix, AS_HELP_STRING([--enable-nix],[use the Nix backend]),enable_nix=$enableval,enable_nix=no)
+AC_ARG_ENABLE(neko, AS_HELP_STRING([--enable-neko],[use the Neko backend]),enable_neko=$enableval,enable_neko=no)
 
 # export to Makefile.am's
 AM_CONDITIONAL(BACKEND_TYPE_ALPM, [test x$enable_alpm = xyes])
@@ -402,6 +403,7 @@ AM_CONDITIONAL(BACKEND_TYPE_URPMI, [test x$enable_urpmi = xyes])
 AM_CONDITIONAL(BACKEND_TYPE_YUM, [test x$enable_yum = xyes])
 AM_CONDITIONAL(BACKEND_TYPE_ZYPP, [test x$enable_zypp = xyes])
 AM_CONDITIONAL(BACKEND_TYPE_NIX, [test x$enable_nix = xyes])
+AM_CONDITIONAL(BACKEND_TYPE_NEKO, [test x$enable_neko = xyes])
 
 dnl ---------------------------------------------------------------------------
 dnl - Are we specifying a different dbus root ?
@@ -552,6 +554,24 @@ if test x$enable_nix = xyes; then
 	PKG_CHECK_MODULES(NIX, nix-store >= 1.12)
 fi
 
+if test x$enable_neko = xyes; then
+	AC_LANG([C++])
+	AX_CXX_COMPILE_STDCXX_14([ext], [mandatory])
+
+	AC_CHECK_LIB(curl, curl_version, [
+	    CURL_CFLAGS="`curl-config --cflags`"
+	    CURL_LIBS="`curl-config --libs`"
+	    ], [AC_MSG_ERROR([Cant find curl])])
+	NEKO_PKGMAIN="ataraxia"
+
+	NEKO_CFLAGS="$CURL_CFLAGS"
+	NEKO_LIBS="$CURL_LIBS"
+
+	AC_SUBST(SLACK_PKGMAIN)
+	AC_SUBST(SLACK_CFLAGS)
+	AC_SUBST(SLACK_LIBS)
+fi
+
 AC_SUBST(PK_PLUGIN_DIR, "\$(libdir)/packagekit-backend")
 AC_SUBST(PK_PLUGIN_CFLAGS, "-I\$(top_srcdir)/src -I\$(top_srcdir)/lib -DPK_COMPILATION $GLIB_CFLAGS $GMODULE_CFLAGS $GIO_CFLAGS")
 AC_SUBST(PK_PLUGIN_LIBS, "$GLIB_LIBS $GMODULE_LIBS $GIO_LIBS")
@@ -595,6 +615,7 @@ backends/ports/Makefile
 backends/ports/ruby_packagekit/Makefile
 backends/zypp/Makefile
 backends/nix/Makefile
+backends/neko/Makefile
 data/Makefile
 data/org.freedesktop.PackageKit.conf
 data/tests/Makefile
@@ -659,4 +680,5 @@ echo "
         YUM backend:               ${enable_yum}
         Zypp backend:              ${enable_zypp}
         Nix backend:               ${enable_nix}
+        Neko backend:              ${enable_neko}
 "
